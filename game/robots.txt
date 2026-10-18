@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hoardhopper.synapticnoise.com/sitemap.xml
