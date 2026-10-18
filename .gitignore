@@ -1,0 +1,14 @@
+# API keys and local environment
+.env
+.env.*
+
+# Generator history and caches
+.imagegen2-history.jsonl
+.nanogen-history.jsonl
+.audiogen-history.jsonl
+.audiogen-voices.json
+.anim8gen/
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db

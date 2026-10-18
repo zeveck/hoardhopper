@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hoard Hopper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0b0708; --fg: #f6d58a; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; font-family: "Press Start 2P", monospace; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; background: #000; }
+  #touch { position: fixed; inset: auto 0 0 0; display: none; justify-content: space-between; padding: 0 16px 16px; pointer-events: none; }
+  #touch .grp { display: flex; gap: 14px; }
+  #touch button { pointer-events: auto; width: 72px; height: 72px; border-radius: 50%; border: 3px solid rgba(246,213,138,.6); background: rgba(40,20,10,.45); color: var(--fg); font: 18px "Press Start 2P", monospace; }
+  #touch button.big { width: 88px; height: 88px; }
+  body.touch #touch { display: flex; }
+</style>
+</head>
+<body>
+<canvas id="game" width="960" height="540"></canvas>
+<div id="touch">
+  <div class="grp"><button data-k="left">&#9664;</button><button data-k="right">&#9654;</button></div>
+  <div class="grp"><button data-k="jump" class="big">&#9650;</button></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
