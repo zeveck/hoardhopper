@@ -23,6 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Only the game itself is published; the README media stays in the repo.
+      # Tell the offline service worker which version this is and which files to cache.
+      - name: Stamp service worker
+        working-directory: game
+        run: |
+          files=$(find . -type f ! -name sw.js ! -name robots.txt ! -name sitemap.xml ! -name social-card.jpg ! -name OFL.txt \
+            | sed 's|^\./||' | sort | sed 's/.*/"&"/' | paste -sd, -)
+          sed -i "s|'__BUILD__'|'${GITHUB_SHA::12}'|; s|/\*__FILES__\*/|$files|" sw.js
+          ! grep -q -e __BUILD__ -e __FILES__ sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -23,10 +23,15 @@
 <meta name="twitter:description" content="A little dragon with big ambitions. Hop through scrolling caves and build a legendary hoard of gold.">
 <meta name="twitter:image" content="https://hoardhopper.synapticnoise.com/social-card.jpg">
 <meta name="twitter:image:alt" content="A red pixel-art dragon napping on a towering pile of gold under the words Hoard Hopper">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preload" href="fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Press Start 2P (SIL Open Font License, see fonts/OFL.txt), bundled so the game works offline */
+  @font-face { font-family: "Press Start 2P"; font-style: normal; font-weight: 400; font-display: swap;
+    src: url(fonts/press-start-2p-latin.woff2) format("woff2"); }
   :root { --bg: #0b0708; --fg: #f6d58a; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; font-family: "Press Start 2P", monospace; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -45,5 +50,10 @@
   <div class="grp"><button data-k="jump" class="big">&#9650;</button></div>
 </div>
 <script src="game.js"></script>
+<script>
+  // Offline play. Skipped on localhost so local edits aren't hidden behind a cache (add ?sw to test it there).
+  if ('serviceWorker' in navigator && (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || /[?&]sw\b/.test(location.search)))
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+</script>
 </body>
 </html>
