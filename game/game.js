@@ -130,6 +130,10 @@ document.querySelectorAll('#touch button').forEach(b => {
   const up = e => { e.preventDefault(); keys[k] = false; };
   b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
 });
+// Title-screen links: a tap or click opens the link only, never starts the game.
+const cornerLinks = [...document.querySelectorAll('.corner')];
+cornerLinks.forEach(a => ['pointerdown', 'click', 'touchstart'].forEach(t => a.addEventListener(t, e => e.stopPropagation())));
+cornerLinks.forEach(a => a.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'NumpadEnter') e.stopPropagation(); }));
 
 // ---------- helpers ----------
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -730,6 +734,8 @@ function frame(now) {
     if (press && sceneT > 0.8) startLevel(level.n);
   }
   if (scene === 'lair') { anyPressed = press; updateLair(dt); anyPressed = false; drawLair(); }
+  const onTitle = scene === 'title';
+  if (cornerLinks[0] && cornerLinks[0].hidden === onTitle) cornerLinks.forEach(a => { a.hidden = !onTitle; if (!onTitle && document.activeElement === a) a.blur(); });
   requestAnimationFrame(frame);
 }
 
@@ -737,6 +743,11 @@ function frame(now) {
 function fit() {
   const s = Math.min(innerWidth / W, innerHeight / H);
   canvas.style.width = Math.floor(W * s) + 'px'; canvas.style.height = Math.floor(H * s) + 'px';
+  // Keep the corner links clear of the on-screen buttons, or of the "M: mute" label when the canvas reaches the bottom edge.
+  const gap = (innerHeight - Math.floor(H * s)) / 2, touch = document.body.classList.contains('touch');
+  const lift = (el, px) => el && el.style.setProperty('--lift', Math.max(10, Math.ceil(px)) + 'px');
+  lift(cornerLinks[0], touch ? 112 : 10);
+  lift(cornerLinks[1], touch ? 112 : gap < 30 * s ? gap + 30 * s + 2 : 10);
 }
 addEventListener('resize', fit); fit();
 

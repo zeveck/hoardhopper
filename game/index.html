@@ -41,6 +41,15 @@
   #touch button { pointer-events: auto; width: 72px; height: 72px; border-radius: 50%; border: 3px solid rgba(246,213,138,.6); background: rgba(40,20,10,.45); color: var(--fg); font: 18px "Press Start 2P", monospace; }
   #touch button.big { width: 88px; height: 88px; }
   body.touch #touch { display: flex; }
+  /* Title-screen links. game.js shows them only on the title and lifts them clear of the mute label and touch buttons. */
+  .corner { position: fixed; bottom: calc(env(safe-area-inset-bottom) + var(--lift, 10px)); padding: 6px 4px; font: 11px/1 "Press Start 2P", monospace;
+    color: #e8d3a0; text-decoration: none; text-shadow: 2px 2px 0 rgba(0,0,0,.75); opacity: .7; touch-action: manipulation; }
+  .corner:focus-visible { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+  @media (hover: hover) { .corner:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; } }
+  .corner[hidden] { display: none; }
+  #site-link { left: calc(env(safe-area-inset-left) + 12px); }
+  #gh-link { right: calc(env(safe-area-inset-right) + 12px); }
+  @media (pointer: coarse), (max-width: 700px) { .corner { font-size: 9px; } }
 </style>
 </head>
 <body>
@@ -49,6 +58,8 @@
   <div class="grp"><button data-k="left">&#9664;</button><button data-k="right">&#9654;</button></div>
   <div class="grp"><button data-k="jump" class="big">&#9650;</button></div>
 </div>
+<a id="site-link" class="corner" href="https://synapticnoise.com/" hidden>synapticnoise.com</a>
+<a id="gh-link" class="corner" href="https://github.com/zeveck/hoardhopper" target="_blank" rel="noopener" title="Hoard Hopper on GitHub: how it was made" aria-label="Hoard Hopper on GitHub: how it was made" hidden>GitHub</a>
 <script src="game.js"></script>
 <script>
   // Offline play. Skipped on localhost so local edits aren't hidden behind a cache (add ?sw to test it there).
