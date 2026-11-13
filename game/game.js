@@ -104,11 +104,24 @@ function toggleMute() {
   try { localStorage.setItem('hoard-hopper-muted', muted ? '1' : '0'); } catch (e) {}
 }
 
+// ---------- bug reports ----------
+// "Report a bug" (title and OUCH! screens) and Ctrl+Shift+F open the gh-feedback form.
+// While it's open the game stands still and ignores every key and tap: the player is typing.
+const fb = document.getElementById('report');
+const reportBtn = document.getElementById('report-link');
+const showReport = !!fb?.getAttribute('repo');
+let reportFreeze = 0;                      // covers the moment before the form takes focus
+const reportOpen = () => !!fb && (document.activeElement === fb || performance.now() < reportFreeze);
+const fromReport = e => !!fb && (e.composedPath?.().includes(fb) || reportOpen());
+function freezeForReport() { reportFreeze = performance.now() + 400; keys.left = keys.right = keys.jump = false; jumpPressed = anyPressed = false; }
+function openReport() { freezeForReport(); fb.open(); }
+
 // ---------- input ----------
 const keys = { left: false, right: false, jump: false };
 let jumpPressed = false, anyPressed = false;
 const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump', KeyZ: 'jump' };
 addEventListener('keydown', e => {
+  if (fromReport(e)) return;
   initAudio(); if (actx && actx.state === 'suspended') actx.resume();
   const k = KEYMAP[e.code];
   if (k) { if (k === 'jump' && !keys.jump) jumpPressed = true; keys[k] = true; e.preventDefault(); }
@@ -118,6 +131,7 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) keys[k] = false; });
 canvas.addEventListener('pointerdown', e => {
+  if (fromReport(e)) return;
   initAudio(); if (actx && actx.state === 'suspended') actx.resume();
   anyPressed = true;
   const r = canvas.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
@@ -126,7 +140,7 @@ canvas.addEventListener('pointerdown', e => {
 if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
 document.querySelectorAll('#touch button').forEach(b => {
   const k = b.dataset.k;
-  b.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); if (actx && actx.state === 'suspended') actx.resume(); if (k === 'jump') { jumpPressed = true; anyPressed = true; } keys[k] = true; });
+  b.addEventListener('pointerdown', e => { if (fromReport(e)) return; e.preventDefault(); initAudio(); if (actx && actx.state === 'suspended') actx.resume(); if (k === 'jump') { jumpPressed = true; anyPressed = true; } keys[k] = true; });
   const up = e => { e.preventDefault(); keys[k] = false; };
   b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
 });
@@ -134,6 +148,11 @@ document.querySelectorAll('#touch button').forEach(b => {
 const cornerLinks = [...document.querySelectorAll('.corner')];
 cornerLinks.forEach(a => ['pointerdown', 'click', 'touchstart'].forEach(t => a.addEventListener(t, e => e.stopPropagation())));
 cornerLinks.forEach(a => a.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'NumpadEnter') e.stopPropagation(); }));
+// The report button is one of them, and Space presses it too.
+if (reportBtn) {
+  reportBtn.addEventListener('keydown', e => { if (e.code === 'Space') e.stopPropagation(); });
+  reportBtn.addEventListener('click', openReport);
+}
 
 // ---------- helpers ----------
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -706,6 +725,7 @@ function drawFail() {
 
 let last = performance.now(), acc = 0;
 function frame(now) {
+  if (reportOpen()) { last = now; requestAnimationFrame(frame); return; }   // frozen while the bug report form is open
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
   sceneT += dt;
   const press = anyPressed; anyPressed = false;
@@ -735,7 +755,12 @@ function frame(now) {
   }
   if (scene === 'lair') { anyPressed = press; updateLair(dt); anyPressed = false; drawLair(); }
   const onTitle = scene === 'title';
-  if (cornerLinks[0] && cornerLinks[0].hidden === onTitle) cornerLinks.forEach(a => { a.hidden = !onTitle; if (!onTitle && document.activeElement === a) a.blur(); });
+  if (cornerLinks[0] && cornerLinks[0].hidden === onTitle) cornerLinks.forEach(a => { if (a !== reportBtn) { a.hidden = !onTitle; if (!onTitle && document.activeElement === a) a.blur(); } });
+  if (reportBtn) {
+    const show = showReport && (onTitle || (scene === 'fail' && sceneT > 0.8)), onFail = scene === 'fail';
+    if (reportBtn.hidden === show) { reportBtn.hidden = !show; if (!show && document.activeElement === reportBtn) reportBtn.blur(); }
+    reportBtn.classList.toggle('on-fail', onFail);
+  }
   requestAnimationFrame(frame);
 }
 
@@ -748,8 +773,37 @@ function fit() {
   const lift = (el, px) => el && el.style.setProperty('--lift', Math.max(10, Math.ceil(px)) + 'px');
   lift(cornerLinks[0], touch ? 112 : 10);
   lift(cornerLinks[1], touch ? 112 : gap < 30 * s ? gap + 30 * s + 2 : 10);
+  // on the OUCH! screen, "Report a bug" sits just under "SPACE / tap to try again"
+  if (reportBtn) reportBtn.style.setProperty('--fail-top', Math.round(gap + 368 * s) + 'px');
 }
 addEventListener('resize', fit); fit();
+
+// What goes with a report: the moment on screen, and the game's details.
+if (fb) {
+  const flat = v => String(v).replace(/\s+/g, ' ');
+  fb.getScreenshot = () => new Promise(r => canvas.toBlob(r, 'image/png'));   // the form asks as it opens, before anything covers the game
+  fb.getContext = () => ({
+    game: 'Hoard Hopper',
+    address: location.origin + location.pathname,
+    updated: document.lastModified,
+    build: window.desktop ? `desktop app (${window.desktop.platform})` : 'web',
+    browser: navigator.userAgent,
+    screen: `${innerWidth}x${innerHeight} @${devicePixelRatio}x`,
+    state: flat(reportState()),
+    errors: (window.reportErrors || []).join(' | ') || 'none',
+  });
+  if (window.desktop) fb.openLink = url => { window.open(url, '_blank'); return true; };
+  window.reportShortcut = freezeForReport;
+}
+function reportState() {
+  const parts = [`scene ${scene}`];
+  if (level && scene !== 'title' && scene !== 'loading') {
+    parts.push(`cave ${level.n + 1} ${level.cave.name}`, `hearts ${player.hearts}`, `bag ${bagValue}`,
+      `x ${Math.round(player.x)}/${Math.round(level.endX)} y ${Math.round(player.y)}`, `time ${levelTime.toFixed(1)}s`);
+  }
+  parts.push(`hoard ${save.hoard}`, `next cave ${save.level + 1}`, muted ? 'muted' : 'sound on');
+  return parts.join(', ');
+}
 
 loadImages().then(() => { (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { scene = 'title'; sceneT = 0; }); });
 requestAnimationFrame(frame);

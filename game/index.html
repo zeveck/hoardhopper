@@ -50,6 +50,13 @@
   #site-link { left: calc(env(safe-area-inset-left) + 12px); }
   #gh-link { right: calc(env(safe-area-inset-right) + 12px); }
   @media (pointer: coarse), (max-width: 700px) { .corner { font-size: 9px; } }
+  /* "Report a bug": top right on the title screen, under the retry prompt on the OUCH! screen (game.js places it). */
+  #report-link { bottom: auto; top: calc(env(safe-area-inset-top) + 10px); right: calc(env(safe-area-inset-right) + 12px);
+    background: none; border: 0; margin: 0; cursor: pointer; }
+  #report-link.on-fail { top: var(--fail-top, 70%); right: auto; left: 50%; transform: translateX(-50%); }
+  /* The bug report form, in the game's colours. It must stay selectable so phones can type into it. */
+  gh-feedback { -webkit-user-select: text; user-select: text; touch-action: auto;
+    --gh-feedback-bg: #24130d; --gh-feedback-text: #f6e2b0; --gh-feedback-border: #6b4426; --gh-feedback-input-bg: #160b07; }
 </style>
 </head>
 <body>
@@ -60,6 +67,26 @@
 </div>
 <a id="site-link" class="corner" href="https://synapticnoise.com/" hidden>synapticnoise.com</a>
 <a id="gh-link" class="corner" href="https://github.com/zeveck/hoardhopper" target="_blank" rel="noopener" title="Hoard Hopper on GitHub: how it was made" aria-label="Hoard Hopper on GitHub: how it was made" hidden>GitHub</a>
+<button id="report-link" class="corner" type="button" title="Report a bug (Ctrl+Shift+F)" hidden>Report a bug</button>
+<gh-feedback id="report" trigger="none" repo="zeveck/hoardhopper" template="bug.yml"
+  types="bug,feature" theme="dark" color="#b8461c"></gh-feedback>
+<script>
+  // Bug reports: Ctrl+Shift+F opens the form from anywhere, even if the game itself has stopped.
+  // Set up before the game's code, so an error in the game can't stop it.
+  window.reportErrors = [];
+  addEventListener('error', (e) => { reportErrors.push(String(e.message).replace(/\s+/g, ' ').slice(0, 200)); reportErrors.splice(0, reportErrors.length - 5); });
+  addEventListener('unhandledrejection', (e) => { reportErrors.push(String(e.reason?.message ?? e.reason).replace(/\s+/g, ' ').slice(0, 200)); reportErrors.splice(0, reportErrors.length - 5); });
+  addEventListener('keydown', (e) => {
+    if (!e.ctrlKey || !e.shiftKey || e.altKey || e.metaKey || e.key.toLowerCase() !== 'f') return;
+    const fb = document.getElementById('report');
+    if (!fb?.getAttribute('repo') || document.activeElement === fb) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    try { window.reportShortcut?.(); } catch {}   // the game freezes, if it still can
+    fb.open();
+  }, true);
+</script>
+<script type="module" src="vendor/gh-feedback.js"></script>
 <script src="game.js"></script>
 <script>
   // Offline play. Skipped on localhost so local edits aren't hidden behind a cache (add ?sw to test it there).

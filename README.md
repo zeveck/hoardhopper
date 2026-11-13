@@ -31,6 +31,7 @@ At the end of every cave, your dragon flies home and stashes the haul. The pile 
 - **Jump:** Space, W or Up. Press it again in the air to flap your wings for a little extra lift.
 - **Mute:** M
 - On a phone, use the on-screen buttons. On Android you can install it from Chrome's menu (**Install app**) to play full screen, even offline.
+- Found a bug? Press Ctrl+Shift+F, or pick 'Report a bug' (you'll need a GitHub account).
 
 You have three hearts per cave. Getting hurt shakes a little treasure loose, and if you run out of hearts you'll try that cave again. Don't worry: the hoard back home is always safe.
 
